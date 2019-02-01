@@ -26,10 +26,8 @@ import com.google.typography.font.tools.conversion.woff.WoffWriter;
 import com.google.typography.font.tools.subsetter.HintStripper;
 import com.google.typography.font.tools.subsetter.RenumberingSubsetter;
 import com.google.typography.font.tools.subsetter.Subsetter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -115,6 +113,81 @@ public class SfntTool {
     }
 
     tool.subsetFontFile();
+  }
+
+  private static void test() throws IOException {
+    int loop = 100;
+    System.out.println("------");
+    test2(loop);
+    System.out.println("======");
+    test1(loop);
+    System.out.println("------100");
+    test3(100,loop);
+    System.out.println("======512");
+    test3(512,loop);
+    System.out.println("------10");
+    test3(10,loop);
+    System.out.println("======1024");
+    test3(1024,loop);
+  }
+
+  private static void test1 (int loop) throws IOException {
+    File file = new File("C:\\sfnttool\\heiti_nos.ttf");
+    FileInputStream fileInputStream = new FileInputStream(file);
+
+    byte[] fontBytes = new byte[fileInputStream.available()];
+
+    fileInputStream.read(fontBytes);
+
+    FontCompressTool fontCompressTool = new FontCompressTool();
+
+    long start = System.currentTimeMillis();
+    long count = 0;
+    for (int i = 0; i < loop; i++) {
+      byte[] bytes = fontCompressTool.compressFontByte(fontBytes, "在线课件");
+      count+=bytes.length;
+    }
+    System.out.println("time: " + (System.currentTimeMillis() - start));
+    System.out.println("byteCount: " + count);
+  }
+
+  private static void test2 (int loop) throws IOException {
+    FontCompressTool fontCompressTool = new FontCompressTool();
+
+    long start = System.currentTimeMillis();
+    long count = 0;
+    for (int i = 0; i < loop; i++) {
+      File file = new File("C:\\sfnttool\\heiti_nos.ttf");
+      FileInputStream fileInputStream = new FileInputStream(file);
+      byte[] bytes = fontCompressTool.compressFontByte(fileInputStream, "在线课件");
+      count+=bytes.length;
+    }
+    System.out.println("time2: " + (System.currentTimeMillis() - start));
+    System.out.println("byteCount: " + count);
+  }
+
+  private static void test3(int size, int loop) throws IOException {
+    File file = new File("C:\\sfnttool\\heiti_nos.ttf");
+    FileInputStream fileInputStream = new FileInputStream(file);
+
+    ByteArrayOutputStream swapStream = new ByteArrayOutputStream();
+    byte[] buff = new byte[size]; //buff用于存放循环读取的临时数据
+    int rc = 0;
+    while ((rc = fileInputStream.read(buff, 0, size)) > 0) {
+      swapStream.write(buff, 0, rc);
+    }
+    byte[] fontBytes = swapStream.toByteArray(); //in_b为转换之后的结果
+
+    FontCompressTool fontCompressTool = new FontCompressTool();
+
+    long start = System.currentTimeMillis();
+    long count = 0;
+    for (int i = 0; i < loop; i++) {
+      byte[] bytes = fontCompressTool.compressFontByte(fontBytes, "在线课件");
+      count+=bytes.length;
+    }
+    System.out.println("time3: " + (System.currentTimeMillis() - start));
+    System.out.println("byteCount: " + count);
   }
 
   private static String charsFromRegex(Pattern pattern) {
